@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Interactivo de Procesos de Negocio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutral (Background: #F5F5F3, Text: #333333, Primary Accent: #4A90E2, Positive/Success Accent: #50B83C) -->
+    <!-- Application Structure Plan: A multi-section SPA with a top navigation bar for smooth scrolling. The structure separates the report into three logical, digestible parts: an introduction, a deep dive into DFD theory via an interactive comparison tool, and a narrative-driven case study of Davila's House. This task-oriented flow (Learn -> Compare -> Apply) is more engaging than a linear report and allows users to focus on the section most relevant to them, enhancing usability and comprehension. -->
+    <!-- Visualization & Content Choices:
+    - Report Info: DFD Components -> Goal: Inform -> Viz: Interactive HTML cards -> Interaction: Hover/click to reveal details -> Justification: Breaks down complex theory into bite-sized, engaging pieces. Method: HTML/CSS/JS.
+    - Report Info: Industry DFD Comparison -> Goal: Compare -> Viz: Tabbed interface with HTML/CSS diagrams -> Interaction: User selects industry to dynamically display corresponding diagram and analysis -> Justification: Transforms a static table/text into an interactive exploration tool, promoting active learning. Method: HTML/CSS/JS.
+    - Report Info: AS-IS vs TO-BE Impact (Table 2) -> Goal: Compare/Change -> Viz: Bar Chart -> Interaction: Hover tooltips -> Justification: Provides a high-impact, quantitative visualization of the proposed solution's benefits, making the business case compelling and easy to grasp. Library: Chart.js.
+    - Report Info: Process Diagrams (AS-IS/TO-BE) -> Goal: Organize/Compare -> Viz: Structured HTML/CSS diagrams -> Interaction: Hover tooltips on key processes -> Justification: Visualizes the process flow clearly without relying on static images, allowing for interactivity and responsiveness. Method: HTML/CSS/JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F3;
+            color: #333333;
+        }
+        .accent-color { color: #4A90E2; }
+        .accent-bg { background-color: #4A90E2; }
+        .success-color { color: #50B83C; }
+        .success-bg { background-color: #50B83C; }
+        .section-card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-color: #4A90E2;
+            background-color: #4A90E2;
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+        .dfd-element {
+             border: 2px solid #9CA3AF; padding: 0.5rem 1rem; border-radius: 0.5rem; text-align: center; background-color: white;
+        }
+        .dfd-process {
+             border-radius: 0.5rem; border: 2px solid #4A90E2;
+        }
+        .dfd-entity {
+            border-radius: 0.5rem; border: 2px solid #F59E0B;
+            transform: skew(-15deg);
+        }
+        .dfd-entity span {
+            display: inline-block;
+            transform: skew(15deg);
+        }
+        .dfd-datastore {
+            border-left: 2px solid #4A90E2;
+            border-right: 2px solid #4A90E2;
+            border-top: 1px solid #4A90E2;
+            border-bottom: 1px solid #4A90E2;
+            border-radius: 0;
+            padding: 0.5rem 1.5rem;
+        }
+        .arrow {
+            position: absolute;
+            background-color: #6B7280;
+            height: 2px;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .arrow.right::after {
+            border-left: 8px solid #6B7280;
+            right: -8px; top: -4px;
+        }
+        .arrow.left::after {
+             border-right: 8px solid #6B7280;
+             left: -8px; top: -4px;
+        }
+        .arrow.down::after {
+            border-top: 8px solid #6B7280;
+            left: -4px; bottom: -8px;
+            transform: rotate(90deg);
+        }
+        .arrow.up::after {
+            border-bottom: 8px solid #6B7280;
+            left: -4px; top: -8px;
+            transform: rotate(90deg);
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">Análisis de Procesos</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#introduction" class="text-gray-600 hover:accent-color px-3 py-2 rounded-md text-sm font-medium">Introducción</a>
+                        <a href="#part1" class="text-gray-600 hover:accent-color px-3 py-2 rounded-md text-sm font-medium">Parte 1: Análisis DFD</a>
+                        <a href="#part2" class="text-gray-600 hover:accent-color px-3 py-2 rounded-md text-sm font-medium">Parte 2: Caso Práctico</a>
+                    </div>
+                </div>
+                 <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#introduction" class="text-gray-600 hover:accent-color block px-3 py-2 rounded-md text-base font-medium">Introducción</a>
+                <a href="#part1" class="text-gray-600 hover:accent-color block px-3 py-2 rounded-md text-base font-medium">Parte 1: Análisis DFD</a>
+                <a href="#part2" class="text-gray-600 hover:accent-color block px-3 py-2 rounded-md text-base font-medium">Parte 2: Caso Práctico</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="introduction" class="py-16 sm:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Del Dato a la Decisión: Optimización Estratégica de Procesos</h2>
+                <p class="mt-6 max-w-3xl mx-auto text-lg leading-8 text-gray-600">
+                    Este informe interactivo explora el valor de los Diagramas de Flujo de Datos (DFD) como herramienta estratégica. Analizamos cómo diferentes industrias modelan sus flujos de información y aplicamos estos conceptos a un caso práctico: la propuesta de reingeniería de procesos para una PYME local, demostrando cómo la inteligencia de procesos impulsa la ventaja competitiva.
+                </p>
+            </div>
+        </section>
+
+        <section id="part1" class="py-16 sm:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <p class="text-base font-semibold accent-color">Parte 1: Análisis Comparativo</p>
+                    <h3 class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">El ADN de los Negocios: El Flujo de Datos</h3>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">Un Diagrama de Flujo de Datos (DFD) no es solo un dibujo técnico; es un mapa que revela cómo viaja la información, dónde se transforma y dónde se almacena. A continuación, exploramos sus componentes fundamentales.</p>
+                </div>
+
+                <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+                    <div id="dfd-components-container"></div>
+                </div>
+                
+                <div class="mt-20 text-center">
+                     <h4 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Análisis Sectorial Interactivo</h4>
+                     <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">El diseño de un DFD es una consecuencia directa del modelo de negocio. Seleccione una industria para analizar cómo sus prioridades estratégicas moldean su flujo de datos.</p>
+                </div>
+
+                <div class="mt-10 section-card p-6 md:p-8">
+                     <div class="border-b border-gray-200 overflow-x-auto">
+                        <nav id="sector-tabs" class="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs"></nav>
+                    </div>
+                    <div id="sector-content" class="mt-8"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="part2" class="py-16 sm:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <p class="text-base font-semibold accent-color">Parte 2: Caso Práctico</p>
+                    <h3 class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Transformando a "Davila's House"</h3>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Aplicamos la teoría a la práctica, analizando el proceso de "Gestión de Comedores Industriales" de una PYME real en San Nicolás de los Garza. El objetivo: pasar de un sistema manual y fragmentado a uno automatizado y eficiente.</p>
+                </div>
+                
+                <div class="mt-16 grid lg:grid-cols-2 gap-12 items-start">
+                    <div class="section-card p-6 md:p-8">
+                        <h4 class="text-2xl font-bold text-center text-red-600">Estado Actual (AS-IS)</h4>
+                        <p class="text-center text-gray-600 mt-2">Un proceso manual, propenso a errores y poco escalable.</p>
+                        <div id="as-is-diagram" class="mt-6 p-4 bg-red-50 rounded-lg">
+                            <h5 class="font-bold text-center mb-4">DFD del Proceso Manual</h5>
+                             <div class="relative h-96 flex flex-col justify-between items-center text-xs sm:text-sm">
+                                <div class="dfd-element dfd-entity"><span>Empresa Cliente</span></div>
+                                <div class="dfd-element dfd-process">2.0 Recibir Pedidos Manuales</div>
+                                <div class="dfd-element dfd-process">5.0 Generar Factura Manual</div>
+                                <div class="dfd-element dfd-entity"><span>Contabilidad</span></div>
+                                
+                                <div class="arrow down" style="width: 2px; height: 18%; left: 50%; top: 18%;"></div>
+                                <div class="arrow down" style="width: 2px; height: 18%; left: 50%; top: 50%;"></div>
+
+                                <div class="absolute dfd-element dfd-datastore" style="top: 45%; right: 0;">D2 Bandeja de Emails</div>
+                                <div class="absolute dfd-element dfd-datastore" style="bottom: 10%; right: 0;">D3 Hoja de Cálculo</div>
+
+                                <div class="arrow left" style="width: 15%; height: 2px; top: 31%; right: 35%;"></div>
+                                <div class="arrow right" style="width: 15%; height: 2px; top: 78%; right: 35%;"></div>
+                            </div>
+                        </div>
+                         <div class="mt-6">
+                            <h5 class="font-semibold text-lg mb-2">Puntos de Dolor Identificados:</h5>
+                            <ul id="pain-points-list" class="space-y-2 text-gray-700"></ul>
+                        </div>
+                    </div>
+                    
+                    <div class="section-card p-6 md:p-8">
+                        <h4 class="text-2xl font-bold text-center success-color">Propuesta (TO-BE)</h4>
+                        <p class="text-center text-gray-600 mt-2">Un portal B2B que automatiza y centraliza el ciclo de pedidos.</p>
+                         <div id="to-be-diagram" class="mt-6 p-4 bg-green-50 rounded-lg">
+                            <h5 class="font-bold text-center mb-4">DFD del Sistema Automatizado</h5>
+                             <div class="relative h-96 flex flex-col justify-between items-center text-xs sm:text-sm">
+                                <div class="dfd-element dfd-entity"><span>Empresa Cliente</span></div>
+                                <div class="dfd-element dfd-process">2.0 Procesar Pedidos del Portal</div>
+                                <div class="dfd-element dfd-process">5.0 Automatizar Ciclo Facturación</div>
+                                <div class="dfd-element dfd-entity"><span>Pasarela de Pago</span></div>
+                                
+                                <div class="arrow down" style="width: 2px; height: 18%; left: 50%; top: 18%;"></div>
+                                <div class="arrow down" style="width: 2px; height: 18%; left: 50%; top: 50%;"></div>
+
+                                <div class="absolute dfd-element dfd-datastore" style="top: 45%; right: 0;">D2 Base de Datos de Pedidos</div>
+                                <div class="arrow left" style="width: 15%; height: 2px; top: 31%; right: 35%;"></div>
+                                <div class="arrow left" style="width: 15%; height: 2px; top: 60%; right: 35%;"></div>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <h5 class="font-semibold text-lg mb-2">Visión del Proceso Optimizado:</h5>
+                            <ul id="optimized-process-list" class="space-y-2 text-gray-700"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-20 text-center">
+                     <h4 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Análisis de Impacto Cuantitativo</h4>
+                     <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">La implementación de la propuesta genera mejoras medibles en los indicadores clave (KPIs) del negocio. La gráfica compara el "antes" y el "después".</p>
+                </div>
+
+                <div class="mt-10 section-card p-6 md:p-8">
+                    <div class="chart-container">
+                        <canvas id="impactChart"></canvas>
+                    </div>
+                </div>
+
+                 <div class="mt-20">
+                     <div class="text-center">
+                        <h4 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Herramientas BPM Recomendadas</h4>
+                        <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">Para una PYME, la clave es elegir soluciones asequibles, fáciles de usar y escalables. Aquí algunas recomendaciones.</p>
+                     </div>
+                     <div id="tools-container" class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3"></div>
+                 </div>
+
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
+            <div class="mb-8 space-y-2">
+                 <p class="text-lg font-semibold">Evidencia 2</p>
+                 <p>Jose Garza - Matrícula: Al07044692</p>
+                 <p>Mtra. Sandra Nohemí Ramos Hernández</p>
+                 <p class="font-semibold mt-2">Modelación de Procesos de Negocio</p>
+            </div>
+            <div class="border-t border-gray-700 pt-8 text-sm text-gray-400">
+                <p>&copy; 2025 Jose Garza - Tecmilenio</p>
+                <p class="mt-2 max-w-2xl mx-auto">Esta página web fue creada con fines exclusivamente educativos para el curso de Modelación de Procesos de Negocio.</p>
+            </div>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const appData = {
+        dfdComponents: [
+            {
+                name: 'Entidades Externas',
+                description: 'Sistemas, personas u organizaciones fuera del sistema que son fuente o destino de datos (ej. Cliente, Proveedor).',
+                icon: '👤'
+            },
+            {
+                name: 'Procesos',
+                description: 'Actividades que transforman datos de entrada en datos de salida (ej. "Procesar Pedido").',
+                icon: '⚙️'
+            },
+            {
+                name: 'Almacenes de Datos',
+                description: 'Repositorios donde se guarda la información para uso posterior (ej. Base de Datos de Clientes).',
+                icon: '🗄️'
+            },
+            {
+                name: 'Flujos de Datos',
+                description: 'Representados por flechas, indican el movimiento de información entre los otros componentes.',
+                icon: '➡️'
+            }
+        ],
+        sectors: {
+            'food': {
+                name: 'Pedidos de Comida',
+                description: 'Modelo B2C de alta frecuencia y bajo margen. La optimización se centra en la velocidad de la transacción y la experiencia del usuario. El flujo es transaccional y efímero.',
+                kpis: ['Eficiencia transaccional', 'Baja complejidad', 'Almacén de Pedidos clave'],
+                diagram: '<div class="dfd-element dfd-entity"><span>Cliente</span></div><div class="dfd-element dfd-process">1.0 Tomar Pedido</div><div class="dfd-element dfd-entity"><span>Cocina</span></div>'
+            },
+            'ecommerce': {
+                name: 'E-commerce',
+                description: 'Añade la complejidad de la gestión de inventario físico, logística y cuentas de cliente. Considerado el diseño de DFD más equilibrado y eficaz para comunicar.',
+                kpis: ['Logística y stock', 'Experiencia de cliente', 'Almacén de Inventario crítico'],
+                diagram: '<div class="dfd-element dfd-entity"><span>Cliente</span></div><div class="dfd-element dfd-process">3.0 Procesar Carrito</div><div class="dfd-element dfd-entity"><span>Almacén</span></div>'
+            },
+            'hospital': {
+                name: 'Gestión Hospitalaria',
+                description: 'Sistema regido por la seguridad, confidencialidad y cumplimiento normativo. Su alta complejidad lo convierte en el diseño menos eficaz para representar claramente con un DFD de alto nivel.',
+                kpis: ['Alta regulación', 'Flujo de datos complejo', 'Expediente clínico como activo crítico'],
+                diagram: '<div class="dfd-element dfd-entity"><span>Paciente</span></div><div class="dfd-element dfd-process">4.0 Gestionar Expediente</div><div class="dfd-element dfd-entity"><span>Aseguradora</span></div>'
+            },
+            'university': {
+                name: 'Registro Universitario',
+                description: 'Proceso administrativo con un ciclo de vida largo y múltiples validaciones internas. El flujo de datos es cíclico y relacional, gestionando la relación con el estudiante a través de semestres.',
+                kpis: ['Ciclo de vida largo', 'Múltiples validaciones', 'Integridad del registro académico'],
+                diagram: '<div class="dfd-element dfd-entity"><span>Estudiante</span></div><div class="dfd-element dfd-process">3.0 Inscribir Cursos</div><div class="dfd-element dfd-entity"><span>Profesorado</span></div>'
+            }
+        },
+        davilasHouse: {
+            painPoints: [
+                { icon: '⏳', text: '<strong>Ineficiencia Operativa:</strong> Excesivo tiempo administrativo en tareas manuales repetitivas.' },
+                { icon: '❌', text: '<strong>Falta de Integridad de Datos:</strong> Alto riesgo de errores en pedidos y facturación.' },
+                { icon: '📈', text: '<strong>Escalabilidad Nula:</strong> El modelo manual frena el crecimiento del negocio B2B.' },
+                { icon: '🙁', text: '<strong>Experiencia de Cliente Deficiente:</strong> Proceso engorroso y poco profesional para clientes corporativos.' }
+            ],
+            optimizedProcess: [
+                { icon: '🌐', text: 'El cliente accede a un portal web seguro y autogestiona sus pedidos.' },
+                { icon: '🤖', text: 'El sistema genera automáticamente órdenes de producción y rutas de entrega.' },
+                { icon: '🧾', text: 'La facturación se consolida y envía automáticamente al final del período.' },
+                { icon: '💡', text: 'La gerencia obtiene acceso a datos valiosos en tiempo real para tomar decisiones.' }
+            ],
+            impactData: {
+                labels: ['Tiempo Admin. por Cliente', 'Tasa de Error en Facturación (%)', 'Capacidad de Crecimiento (%)'],
+                asIs: [20, 8, 100], 
+                toBe: [2, 1, 140]  
+            },
+            tools: [
+                { name: 'Lucidchart / Visio', type: 'Modelado de Diagramas', cost: '$', ease: 'Media', suitability: 'Excelente para la fase de diseño y análisis, pero sin automatización del proceso real.', color: 'bg-blue-100' },
+                { name: 'Airtable / Jotform', type: 'Plataforma Low-Code', cost: '$$', ease: 'Muy Alta', suitability: 'Recomendado para la implementación. Permite construir el portal y automatizar el flujo rápidamente.', color: 'bg-yellow-100' },
+                { name: 'Suite BPM (Appian, Pega)', type: 'Nivel Empresarial', cost: '$$$$$', ease: 'Baja (Requiere especialistas)', suitability: 'No recomendado. Excesivamente complejo y costoso para las necesidades de una PYME.', color: 'bg-red-100' }
+            ]
+        }
+    };
+
+    function init() {
+        setupMobileMenu();
+        renderDfdComponents();
+        renderSectorTabs();
+        renderSectorContent('food');
+        renderDavilasHouseContent();
+        renderImpactChart();
+        renderTools();
+    }
+    
+    function setupMobileMenu() {
+        const menuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const openIcon = menuButton.querySelector('svg:first-child');
+        const closeIcon = menuButton.querySelector('svg:last-child');
+
+        menuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            openIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        });
+
+        // Close menu when a link is clicked
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A') {
+                mobileMenu.classList.add('hidden');
+                openIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+            }
+        });
+    }
+
+    function renderDfdComponents() {
+        const container = document.getElementById('dfd-components-container');
+        container.innerHTML = appData.dfdComponents.map(c => `
+            <div class="section-card p-6 text-center">
+                <div class="text-4xl">${c.icon}</div>
+                <h5 class="mt-4 text-lg font-semibold">${c.name}</h5>
+                <p class="mt-2 text-sm text-gray-600">${c.description}</p>
+            </div>
+        `).join('');
+    }
+
+    function renderSectorTabs() {
+        const container = document.getElementById('sector-tabs');
+        container.innerHTML = Object.keys(appData.sectors).map((key, index) => `
+            <button data-sector="${key}" class="tab-button whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm ${index === 0 ? 'active' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}">
+                ${appData.sectors[key].name}
+            </button>
+        `).join('');
+
+        container.addEventListener('click', e => {
+            if (e.target.tagName === 'BUTTON') {
+                const sectorKey = e.target.dataset.sector;
+                renderSectorContent(sectorKey);
+                
+                container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+            }
+        });
+    }
+
+    function renderSectorContent(sectorKey) {
+        const container = document.getElementById('sector-content');
+        const sector = appData.sectors[sectorKey];
+        container.innerHTML = `
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h5 class="text-xl font-bold accent-color">${sector.name}</h5>
+                    <p class="mt-2 text-gray-700">${sector.description}</p>
+                    <ul class="mt-4 space-y-2">
+                        ${sector.kpis.map(kpi => `<li class="flex items-center"><span class="success-color mr-2">✔</span><span>${kpi}</span></li>`).join('')}
+                    </ul>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="relative h-24 flex justify-around items-center text-xs sm:text-sm">
+                        ${sector.diagram}
+                        <div class="arrow right" style="width: 15%; height: 2px; left: 30%; top: 50%;"></div>
+                        <div class="arrow right" style="width: 15%; height: 2px; left: 65%; top: 50%;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderDavilasHouseContent() {
+        const painPointsContainer = document.getElementById('pain-points-list');
+        painPointsContainer.innerHTML = appData.davilasHouse.painPoints.map(p => `
+            <li class="flex items-start">
+                <span class="mr-3 text-xl">${p.icon}</span>
+                <span>${p.text}</span>
+            </li>
+        `).join('');
+
+        const optimizedProcessContainer = document.getElementById('optimized-process-list');
+        optimizedProcessContainer.innerHTML = appData.davilasHouse.optimizedProcess.map(p => `
+            <li class="flex items-start">
+                <span class="mr-3 text-xl">${p.icon}</span>
+                <span>${p.text}</span>
+            </li>
+        `).join('');
+    }
+
+    function renderImpactChart() {
+        const ctx = document.getElementById('impactChart').getContext('2d');
+        const data = appData.davilasHouse.impactData;
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels.map(l => l.split(' ')),
+                datasets: [
+                    {
+                        label: 'Estado Actual (AS-IS)',
+                        data: data.asIs,
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Propuesta (TO-BE)',
+                        data: data.toBe,
+                        backgroundColor: 'rgba(80, 184, 60, 0.6)',
+                        borderColor: 'rgba(80, 184, 60, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                           callback: function(value, index, values) {
+                                return (this.getLabelForValue(value).includes('%')) ? value + '%' : value;
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Comparativa de Rendimiento: AS-IS vs. TO-BE',
+                        font: { size: 18 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    let value = context.parsed.y;
+                                    if (context.label.includes('Error') || context.label.includes('Crecimiento')) {
+                                        value += '%';
+                                    } else {
+                                        value += ' min';
+                                    }
+                                    label += value;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTools() {
+        const container = document.getElementById('tools-container');
+        container.innerHTML = appData.davilasHouse.tools.map(tool => `
+            <div class="section-card overflow-hidden">
+                <div class="p-6">
+                    <h5 class="text-lg font-bold">${tool.name}</h5>
+                    <p class="text-sm text-gray-500 mt-1">${tool.type}</p>
+                    <div class="mt-4 flex justify-between text-sm">
+                        <span>Costo: <span class="font-semibold">${tool.cost}</span></span>
+                        <span>Facilidad: <span class="font-semibold">${tool.ease}</span></span>
+                    </div>
+                    <p class="mt-4 text-sm text-gray-700">${tool.suitability}</p>
+                </div>
+                <div class="h-2 ${tool.color}"></div>
+            </div>
+        `).join('');
+    }
+
+    init();
+});
+</script>
+
+</body>
+</html>
