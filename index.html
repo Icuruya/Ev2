@@ -82,38 +82,6 @@
             border-radius: 0;
             padding: 0.5rem 1.5rem;
         }
-        .arrow {
-            position: absolute;
-            background-color: #6B7280;
-            height: 2px;
-        }
-        .arrow::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 0;
-            border-top: 5px solid transparent;
-            border-bottom: 5px solid transparent;
-        }
-        .arrow.right::after {
-            border-left: 8px solid #6B7280;
-            right: -8px; top: -4px;
-        }
-        .arrow.left::after {
-             border-right: 8px solid #6B7280;
-             left: -8px; top: -4px;
-        }
-        .arrow.down::after {
-            border-top: 8px solid #6B7280;
-            left: -4px; bottom: -8px;
-            transform: rotate(90deg);
-        }
-        .arrow.up::after {
-            border-bottom: 8px solid #6B7280;
-            left: -4px; top: -8px;
-            transform: rotate(90deg);
-        }
-
     </style>
 </head>
 <body class="antialiased">
@@ -171,8 +139,7 @@
                     <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">Un Diagrama de Flujo de Datos (DFD) no es solo un dibujo técnico; es un mapa que revela cómo viaja la información, dónde se transforma y dónde se almacena. A continuación, exploramos sus componentes fundamentales.</p>
                 </div>
 
-                <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                    <div id="dfd-components-container"></div>
+                <div id="dfd-components-container" class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                 </div>
                 
                 <div class="mt-20 text-center">
@@ -202,21 +169,31 @@
                         <h4 class="text-2xl font-bold text-center text-red-600">Estado Actual (AS-IS)</h4>
                         <p class="text-center text-gray-600 mt-2">Un proceso manual, propenso a errores y poco escalable.</p>
                         <div id="as-is-diagram" class="mt-6 p-4 bg-red-50 rounded-lg">
-                            <h5 class="font-bold text-center mb-4">DFD del Proceso Manual</h5>
-                             <div class="relative h-96 flex flex-col justify-between items-center text-xs sm:text-sm">
+                            <h5 class="font-bold text-center mb-6">DFD del Proceso Manual</h5>
+                            <div class="flex flex-col items-center space-y-2 text-xs sm:text-sm">
                                 <div class="dfd-element dfd-entity"><span>Empresa Cliente</span></div>
-                                <div class="dfd-element dfd-process">2.0 Recibir Pedidos Manuales</div>
-                                <div class="dfd-element dfd-process">5.0 Generar Factura Manual</div>
+                                <div class="text-gray-600 text-2xl font-light">↓</div>
+                                <div class="w-full flex items-center justify-center my-2">
+                                    <div class="flex-1"></div>
+                                    <div class="dfd-element dfd-process whitespace-nowrap">2.0 Recibir Pedidos Manuales</div>
+                                    <div class="flex-1 flex items-center pl-2 sm:pl-4">
+                                        <div class="flex-grow border-t-2 border-gray-400 border-dashed"></div>
+                                        <div class="text-gray-500">▶</div>
+                                        <div class="ml-2 dfd-element dfd-datastore whitespace-nowrap">D2 Bandeja de Emails</div>
+                                    </div>
+                                </div>
+                                <div class="text-gray-600 text-2xl font-light">↓</div>
+                                <div class="w-full flex items-center justify-center my-2">
+                                    <div class="flex-1 flex items-center pr-2 sm:pr-4">
+                                         <div class="mr-2 dfd-element dfd-datastore whitespace-nowrap">D3 Hoja de Cálculo</div>
+                                         <div class="text-gray-500">◀</div>
+                                         <div class="flex-grow border-t-2 border-gray-400 border-dashed"></div>
+                                    </div>
+                                    <div class="dfd-element dfd-process whitespace-nowrap">5.0 Generar Factura Manual</div>
+                                    <div class="flex-1"></div>
+                                </div>
+                                <div class="text-gray-600 text-2xl font-light">↓</div>
                                 <div class="dfd-element dfd-entity"><span>Contabilidad</span></div>
-                                
-                                <div class="arrow down" style="width: 2px; height: 18%; left: 50%; top: 18%;"></div>
-                                <div class="arrow down" style="width: 2px; height: 18%; left: 50%; top: 50%;"></div>
-
-                                <div class="absolute dfd-element dfd-datastore" style="top: 45%; right: 0;">D2 Bandeja de Emails</div>
-                                <div class="absolute dfd-element dfd-datastore" style="bottom: 10%; right: 0;">D3 Hoja de Cálculo</div>
-
-                                <div class="arrow left" style="width: 15%; height: 2px; top: 31%; right: 35%;"></div>
-                                <div class="arrow right" style="width: 15%; height: 2px; top: 78%; right: 35%;"></div>
                             </div>
                         </div>
                          <div class="mt-6">
@@ -229,19 +206,29 @@
                         <h4 class="text-2xl font-bold text-center success-color">Propuesta (TO-BE)</h4>
                         <p class="text-center text-gray-600 mt-2">Un portal B2B que automatiza y centraliza el ciclo de pedidos.</p>
                          <div id="to-be-diagram" class="mt-6 p-4 bg-green-50 rounded-lg">
-                            <h5 class="font-bold text-center mb-4">DFD del Sistema Automatizado</h5>
-                             <div class="relative h-96 flex flex-col justify-between items-center text-xs sm:text-sm">
+                            <h5 class="font-bold text-center mb-6">DFD del Sistema Automatizado</h5>
+                             <div class="flex flex-col items-center space-y-2 text-xs sm:text-sm">
                                 <div class="dfd-element dfd-entity"><span>Empresa Cliente</span></div>
-                                <div class="dfd-element dfd-process">2.0 Procesar Pedidos del Portal</div>
-                                <div class="dfd-element dfd-process">5.0 Automatizar Ciclo Facturación</div>
-                                <div class="dfd-element dfd-entity"><span>Pasarela de Pago</span></div>
-                                
-                                <div class="arrow down" style="width: 2px; height: 18%; left: 50%; top: 18%;"></div>
-                                <div class="arrow down" style="width: 2px; height: 18%; left: 50%; top: 50%;"></div>
-
-                                <div class="absolute dfd-element dfd-datastore" style="top: 45%; right: 0;">D2 Base de Datos de Pedidos</div>
-                                <div class="arrow left" style="width: 15%; height: 2px; top: 31%; right: 35%;"></div>
-                                <div class="arrow left" style="width: 15%; height: 2px; top: 60%; right: 35%;"></div>
+                                <div class="text-gray-600 text-2xl font-light">↓</div>
+                                <div class="w-full flex items-center justify-center my-2">
+                                    <div class="flex-1"></div>
+                                    <div class="dfd-element dfd-process whitespace-nowrap">2.0 Procesar Pedidos del Portal</div>
+                                    <div class="flex-1 flex items-center pl-2 sm:pl-4">
+                                        <div class="flex-grow border-t-2 border-gray-400"></div>
+                                        <div class="text-gray-500">▶</div>
+                                        <div class="ml-2 dfd-element dfd-datastore whitespace-nowrap">D2 Base de Datos de Pedidos</div>
+                                    </div>
+                                </div>
+                                <div class="text-gray-600 text-2xl font-light">↓</div>
+                                <div class="w-full flex items-center justify-center my-2">
+                                    <div class="flex-1 flex items-center pr-2 sm:pr-4">
+                                         <div class="mr-2 dfd-element dfd-entity whitespace-nowrap"><span>Pasarela de Pago</span></div>
+                                         <div class="text-gray-500">◀</div>
+                                         <div class="flex-grow border-t-2 border-gray-400"></div>
+                                    </div>
+                                    <div class="dfd-element dfd-process whitespace-nowrap">5.0 Automatizar Ciclo Facturación</div>
+                                    <div class="flex-1"></div>
+                                </div>
                             </div>
                         </div>
                         <div class="mt-6">
@@ -316,29 +303,45 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         ],
         sectors: {
-            'food': {
+            food: {
                 name: 'Pedidos de Comida',
                 description: 'Modelo B2C de alta frecuencia y bajo margen. La optimización se centra en la velocidad de la transacción y la experiencia del usuario. El flujo es transaccional y efímero.',
                 kpis: ['Eficiencia transaccional', 'Baja complejidad', 'Almacén de Pedidos clave'],
-                diagram: '<div class="dfd-element dfd-entity"><span>Cliente</span></div><div class="dfd-element dfd-process">1.0 Tomar Pedido</div><div class="dfd-element dfd-entity"><span>Cocina</span></div>'
+                diagram: `<div class="dfd-element dfd-entity"><span>Cliente</span></div>
+                          <div class="text-2xl font-mono text-gray-500 px-4">→</div>
+                          <div class="dfd-element dfd-process">1.0 Tomar Pedido</div>
+                          <div class="text-2xl font-mono text-gray-500 px-4">→</div>
+                          <div class="dfd-element dfd-entity"><span>Cocina</span></div>`
             },
-            'ecommerce': {
+            ecommerce: {
                 name: 'E-commerce',
                 description: 'Añade la complejidad de la gestión de inventario físico, logística y cuentas de cliente. Considerado el diseño de DFD más equilibrado y eficaz para comunicar.',
                 kpis: ['Logística y stock', 'Experiencia de cliente', 'Almacén de Inventario crítico'],
-                diagram: '<div class="dfd-element dfd-entity"><span>Cliente</span></div><div class="dfd-element dfd-process">3.0 Procesar Carrito</div><div class="dfd-element dfd-entity"><span>Almacén</span></div>'
+                diagram: `<div class="dfd-element dfd-entity"><span>Cliente</span></div>
+                          <div class="text-2xl font-mono text-gray-500 px-4">→</div>
+                          <div class="dfd-element dfd-process">3.0 Procesar Carrito</div>
+                          <div class="text-2xl font-mono text-gray-500 px-4">→</div>
+                          <div class="dfd-element dfd-entity"><span>Almacén</span></div>`
             },
-            'hospital': {
+            hospital: {
                 name: 'Gestión Hospitalaria',
                 description: 'Sistema regido por la seguridad, confidencialidad y cumplimiento normativo. Su alta complejidad lo convierte en el diseño menos eficaz para representar claramente con un DFD de alto nivel.',
                 kpis: ['Alta regulación', 'Flujo de datos complejo', 'Expediente clínico como activo crítico'],
-                diagram: '<div class="dfd-element dfd-entity"><span>Paciente</span></div><div class="dfd-element dfd-process">4.0 Gestionar Expediente</div><div class="dfd-element dfd-entity"><span>Aseguradora</span></div>'
+                diagram: `<div class="dfd-element dfd-entity"><span>Paciente</span></div>
+                          <div class="text-2xl font-mono text-gray-500 px-4">→</div>
+                          <div class="dfd-element dfd-process">4.0 Gestionar Expediente</div>
+                          <div class="text-2xl font-mono text-gray-500 px-4">→</div>
+                          <div class="dfd-element dfd-entity"><span>Aseguradora</span></div>`
             },
-            'university': {
+            university: {
                 name: 'Registro Universitario',
                 description: 'Proceso administrativo con un ciclo de vida largo y múltiples validaciones internas. El flujo de datos es cíclico y relacional, gestionando la relación con el estudiante a través de semestres.',
                 kpis: ['Ciclo de vida largo', 'Múltiples validaciones', 'Integridad del registro académico'],
-                diagram: '<div class="dfd-element dfd-entity"><span>Estudiante</span></div><div class="dfd-element dfd-process">3.0 Inscribir Cursos</div><div class="dfd-element dfd-entity"><span>Profesorado</span></div>'
+                diagram: `<div class="dfd-element dfd-entity"><span>Estudiante</span></div>
+                          <div class="text-2xl font-mono text-gray-500 px-4">→</div>
+                          <div class="dfd-element dfd-process">3.0 Inscribir Cursos</div>
+                          <div class="text-2xl font-mono text-gray-500 px-4">→</div>
+                          <div class="dfd-element dfd-entity"><span>Profesorado</span></div>`
             }
         },
         davilasHouse: {
@@ -389,7 +392,6 @@ document.addEventListener('DOMContentLoaded', function() {
             closeIcon.classList.toggle('hidden');
         });
 
-        // Close menu when a link is clicked
         mobileMenu.addEventListener('click', (e) => {
             if (e.target.tagName === 'A') {
                 mobileMenu.classList.add('hidden');
@@ -442,10 +444,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </ul>
                 </div>
                 <div class="p-4 bg-gray-50 rounded-lg">
-                    <div class="relative h-24 flex justify-around items-center text-xs sm:text-sm">
+                    <div class="flex justify-center items-center text-xs sm:text-sm">
                         ${sector.diagram}
-                        <div class="arrow right" style="width: 15%; height: 2px; left: 30%; top: 50%;"></div>
-                        <div class="arrow right" style="width: 15%; height: 2px; left: 65%; top: 50%;"></div>
                     </div>
                 </div>
             </div>
